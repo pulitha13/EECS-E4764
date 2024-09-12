@@ -14,5 +14,10 @@ mpfshell --open <PORT> -nc repl
 ## Uploading code to flash
 
 ```
+# General
 mpfshell -nc "open <PORT>; mput [FILES]"
+
+# To download ALL python files in your current dir 
+mpfshell -nc "open <PORT>; mput .*\.py"
+
 ```
