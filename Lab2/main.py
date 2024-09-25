@@ -1,3 +1,3 @@
-import checkpoint_1
+import checkpoint_3
 
-checkpoint_1.main()
+checkpoint_3.main()
