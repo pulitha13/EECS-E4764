@@ -33,15 +33,16 @@ def oled_b_handler(pin):
 
     # If button was pressed increase time dep on mode
     if(debouncer.get_debounced(pin) > 0):
-        match clock.edit_clock_mode:
-            case 1:
-                clock.inc_hours()
-            case 2:
-                clock.inc_min()
-            case 3:
-                clock.inc_sec()
-            case _:
-                return
+
+        if(clock.edit_clock_mode == 1):
+            clock.inc_hours()
+        elif(clock.edit_clock_mode == 2):
+            clock.inc_min()
+        elif(clock.edit_clock_mode == 3):
+            clock.inc_sec()
+        else:
+            return
+
 
 def oled_c_handler(pin):
     global debouncer
