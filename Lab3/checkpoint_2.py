@@ -31,7 +31,7 @@ def alarm_handler(pin):
     global clock
     # If button was pressed toggle change time mode
     if(debouncer.get_debounced(pin) == 0):
-        print("We in the oled_A_handler")
+        print("We in the alarm handler")
         clock.change_edit_mode(EditMode.ALARM_EDIT)
 
 def oled_b_handler(pin):
