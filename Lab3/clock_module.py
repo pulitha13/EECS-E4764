@@ -90,6 +90,7 @@ class ClockModule:
                 ret = self.alarm.inc_mode()
             elif(self.edit_mode == EditMode.TIME_EDIT):
                 ret = self.curr_time.inc_mode()
+                print(f"curr_time.mode = {self.curr_time.edit_time_mode}")
 
             if ret == 0:
                 self.edit_mode = EditMode.NORMAL
