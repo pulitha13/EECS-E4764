@@ -1,9 +1,9 @@
 #from machine import Pin, PWM, ADC
-from machine import PWM, Pin, RTC, I2C
+from machine import PWM, Pin, RTC, I2C, ADC
 import utime
 import ssd1306
 from debouncer import Debouncer
-from clock_module import Clock
+from clock_module import ClockModule, EditMode
 
 # Pin connections
 SDA_PIN = 4
@@ -15,7 +15,7 @@ OLED_BUTTON_B = 13
 OLED_BUTTON_C = 12
 
 debouncer = Debouncer()
-clock = Clock()
+clock = ClockModule()
 
 
 def oled_a_handler(pin):
@@ -24,7 +24,7 @@ def oled_a_handler(pin):
     # If button was pressed toggle change time mode
     if(debouncer.get_debounced(pin) == 0):
         print("We in the oled_A_handler")
-        clock.inc_clock_mode()
+        clock.change_edit_mode(EditMode.TIME_EDIT)
 
 
 def oled_b_handler(pin):
@@ -34,14 +34,16 @@ def oled_b_handler(pin):
 
     # If button was pressed increase time dep on mode
     if(debouncer.get_debounced(pin) == 0):
-        if(clock.edit_clock_mode == 1):
-            clock.inc_hour()
-        elif(clock.edit_clock_mode == 2):
-            clock.inc_min()
-        elif(clock.edit_clock_mode == 3):
-            clock.inc_sec()
-        else:
-            return
+        if (clock.get_edit_mode == EditMode.TIME_EDIT):
+            if(clock.curr_time.edit_time_mode == 1):
+                clock.curr_time.inc_hour()
+            elif(clock.curr_time.edit_time_mode == 2):
+                clock.curr_time.inc_min()
+            elif(clock.curr_time.edit_time_mode == 3):
+                clock.curr_time.inc_sec()
+            else:
+                return
+    
 
 
 def oled_c_handler(pin):
@@ -50,14 +52,15 @@ def oled_c_handler(pin):
     print("We in the oled_C_handler")
 
     if(debouncer.get_debounced(pin) == 0):
-        if(clock.edit_clock_mode == 1):
-            clock.dec_hour()
-        elif(clock.edit_clock_mode == 2):
-            clock.dec_min()
-        elif(clock.edit_clock_mode == 3):
-            clock.dec_sec()
-        else:
-            return
+        if (clock.get_edit_mode == EditMode.TIME_EDIT):
+            if(clock.curr_time.edit_time_mode == 1):
+                clock.curr_time.dec_hour()
+            elif(clock.curr_time.edit_time_mode == 2):
+                clock.curr_time.dec_min()
+            elif(clock.curr_time.edit_time_mode == 3):
+                clock.curr_time.dec_sec()
+            else:
+                return
     
 
 def main():
@@ -89,24 +92,23 @@ def main():
     # Local variables to loop
     display_on = True
 
-
     while True:
         brightness = adc.read_u16() >> 8
-        if clock.curr_time.edit_clock_mode > 0:
+        if clock.curr_time.edit_time_mode > 0:
 
             # Update the RTC based on the set time
-            rtc.datetime((year, month, day, weekday, clock.hour, clock.min, clock.sec, subsec))
+            rtc.datetime((year, month, day, weekday, clock.curr_time.hour, clock.curr_time.min, clock.curr_time.sec, subsec))
             # If we are any of the editing modes flash the screen on and off and upate clock
             display_on = not display_on
 
-            print(f"Setting Time as {clock.hour:02}:{clock.min:02}:{clock.sec:02} ")
+            print(f"Setting Time as {clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02} ")
 
         else:
             display_on = True
             # If we are in normal display mode get RTC time and update clock module
             year, month, day, weekday, hour, min, sec, subsec = rtc.datetime()
-            clock.set_clock(hour, min, sec)
-            print(f"Displaying {clock.hour:02}:{clock.min:02}:{clock.sec:02} ")
+            clock.curr_time.set_time(hour, min, sec)
+            print(f"Displaying {clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02} ")
         
         if display_on:
             display.poweron()
@@ -114,7 +116,7 @@ def main():
             display.poweroff()
 
         # Update clock every 1/4 sec
-        display_string = f'{clock.hour:02}:{clock.min:02}:{clock.sec:02}'
+        display_string = f'{clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02}'
         display.fill(0)
         display.text(display_string,0,15,1)
         display.contrast(brightness)

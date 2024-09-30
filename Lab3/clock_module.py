@@ -1,13 +1,13 @@
-
-class Clock:
+from enum import Enum
+class TimeEntity:
 
     """
-    Clock class defines a current time set by the variables
+    TimeEntity class defines a current time set by the variables
 
     self.hour, self.min, self.sec
 
 
-    and a self.clock mode with the following for modes
+    and a self.TimeEntity mode with the following for modes
 
     0 - regular display time w/ no edit
     1 - edit hour hand
@@ -19,18 +19,17 @@ class Clock:
     """
 
     def __init__(self):
+        self.edit_time_mode = 0
         self.hour = 0
         self.min = 0
         self.sec = 0
-
-        self.edit_clock_mode = 0
-
         return
+    
+    def inc_mode(self):
+        self.edit_time_mode += 1
+        self.edit_time_mode = self.edit_time_mode % 4
+        return self.edit_time_mode
 
-    def inc_clock_mode(self):
-        self.edit_clock_mode += 1
-        self.edit_clock_mode = self.edit_clock_mode % 4
-        return
     
     def inc_hour(self):
         self.hour += 1
@@ -56,10 +55,43 @@ class Clock:
         self.sec -= 1
         self.sec = 59 if self.sec < 0 else self.sec
 
-    def get_clock(self):
+    def get_time(self):
         return ((0,0,0,0,self.hour,self.min,self.sec,0))
 
-    def set_clock(self, hour, min, sec):
+    def set_time(self, hour, min, sec):
         self.sec = sec
         self.min = min
         self.hour = hour
+
+class EditMode(Enum):
+    NORMAL = 0
+    ALARM_EDIT = 1
+    TIME_EDIT = 2
+
+
+class ClockModule:
+        def __init__(self):
+            self.edit_mode = EditMode.NORMAL
+            self.curr_time = TimeEntity()
+            self.alarm = TimeEntity()
+            return
+        
+        def get_edit_mode(self):
+            return self.edit_mode
+        
+        def change_edit_mode(self, edit_mode):
+
+            if(self.edit_mode.value > 0 and edit_mode != self.edit_mode):
+                return
+            
+            ret = 0
+            if(self.edit_mode == EditMode.ALARM_EDIT):
+                ret = self.alarm.inc_mode()
+            elif(self.edit_mode == EditMode.TIME_EDIT):
+                ret = self.curr_time.inc_mode()
+
+            if ret == 0:
+                self.edit_mode = EditMode.NORMAL
+
+            return
+        
