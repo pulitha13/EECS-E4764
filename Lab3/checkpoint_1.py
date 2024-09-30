@@ -34,7 +34,7 @@ def oled_b_handler(pin):
 
     # If button was pressed increase time dep on mode
     if(debouncer.get_debounced(pin) == 0):
-        if (clock.get_edit_mode == EditMode.TIME_EDIT):
+        if (clock.get_edit_mode() == EditMode.TIME_EDIT):
             if(clock.curr_time.edit_time_mode == 1):
                 clock.curr_time.inc_hour()
             elif(clock.curr_time.edit_time_mode == 2):
@@ -52,7 +52,7 @@ def oled_c_handler(pin):
     print("We in the oled_C_handler")
 
     if(debouncer.get_debounced(pin) == 0):
-        if (clock.get_edit_mode == EditMode.TIME_EDIT):
+        if (clock.get_edit_mode() == EditMode.TIME_EDIT):
             if(clock.curr_time.edit_time_mode == 1):
                 clock.curr_time.dec_hour()
             elif(clock.curr_time.edit_time_mode == 2):
