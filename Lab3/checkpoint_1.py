@@ -119,6 +119,10 @@ def main():
         display_string = f'{clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02}'
         display.fill(0)
         display.text(display_string,0,15,1)
+
+        if(clock.edit_mode == EditMode.ALARM_EDIT):
+            display.text("ALARM", 0, 0, 1)
+
         display.contrast(brightness)
         display.show()
         utime.sleep(0.25)
