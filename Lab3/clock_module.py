@@ -1,4 +1,3 @@
-from enum import Enum
 class TimeEntity:
 
     """
@@ -63,7 +62,7 @@ class TimeEntity:
         self.min = min
         self.hour = hour
 
-class EditMode(Enum):
+class EditMode():
     NORMAL = 0
     ALARM_EDIT = 1
     TIME_EDIT = 2
@@ -81,7 +80,7 @@ class ClockModule:
         
         def change_edit_mode(self, edit_mode):
 
-            if(self.edit_mode.value > 0 and edit_mode != self.edit_mode):
+            if(self.edit_mode > 0 and edit_mode != self.edit_mode):
                 return
             
             ret = 0
