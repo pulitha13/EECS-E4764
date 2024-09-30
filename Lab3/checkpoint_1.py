@@ -94,7 +94,7 @@ def main():
 
     while True:
         brightness = adc.read_u16() >> 8
-        if clock.curr_time.edit_time_mode > 0:
+        if clock.edit_mode > 0:
 
             # Update the RTC based on the set time
             rtc.datetime((year, month, day, weekday, clock.curr_time.hour, clock.curr_time.min, clock.curr_time.sec, subsec))
