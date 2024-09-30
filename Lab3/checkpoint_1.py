@@ -83,13 +83,16 @@ def main():
     oled_c = Pin(OLED_BUTTON_C, Pin.IN, Pin.PULL_UP)
     oled_c.irq(handler=oled_c_handler, trigger=Pin.IRQ_FALLING)
 
+    # Initialize ADC
+    adc = ADC(0)
+
     # Local variables to loop
     display_on = True
 
 
     while True:
-
-        if clock.edit_clock_mode > 0:
+        brightness = adc.read_u16() >> 8
+        if clock.curr_time.edit_clock_mode > 0:
 
             # Update the RTC based on the set time
             rtc.datetime((year, month, day, weekday, clock.hour, clock.min, clock.sec, subsec))
@@ -114,6 +117,7 @@ def main():
         display_string = f'{clock.hour:02}:{clock.min:02}:{clock.sec:02}'
         display.fill(0)
         display.text(display_string,0,15,1)
+        display.contrast(brightness)
         display.show()
         utime.sleep(0.25)
         
