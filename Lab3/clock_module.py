@@ -83,6 +83,7 @@ class ClockModule:
             if(self.edit_mode > 0 and edit_mode != self.edit_mode):
                 return
             
+            ret = -1
             if(self.edit_mode == EditMode.ALARM_EDIT):
                 ret = self.alarm.inc_mode()
             elif(self.edit_mode == EditMode.TIME_EDIT):
