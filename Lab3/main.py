@@ -1,3 +1,3 @@
-import Lab3.checkpoint_3 as checkpoint_3
+import Lab3.checkpoint_1 as checkpoint_1
 
-checkpoint_3.main()
+checkpoint_1.main()
