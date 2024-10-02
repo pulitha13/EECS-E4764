@@ -17,7 +17,6 @@ OLED_BUTTON_C = 12
 debouncer = Debouncer()
 clock = ClockModule()
 
-
 def oled_a_handler(pin):
     global debouncer
     global clock
@@ -112,6 +111,7 @@ def main():
     oled_c.irq(handler=oled_c_handler, trigger=Pin.IRQ_FALLING)
     alarm = Pin(BUTTON_PIN, Pin.IN, Pin.PULL_UP)
     alarm.irq(handler=alarm_handler, trigger=Pin.IRQ_FALLING)
+    print("Alarm loaded loaded")
 
     # Initialize ADC
     adc = ADC(0)
@@ -121,21 +121,47 @@ def main():
 
     while True:
         brightness = adc.read_u16() >> 8
-        if clock.edit_mode > 0:
+        
+        if(clock.check_alarm_blaring() and clock.edit_mode == EditMode.NORMAL):
+            clock.edit_mode = EditMode.ALARM_BLARING
+
+        if clock.edit_mode == EditMode.TIME_EDIT:
+            piezzo_pwm.duty(0)
 
             # Update the RTC based on the set time
             rtc.datetime((year, month, day, weekday, clock.curr_time.hour, clock.curr_time.min, clock.curr_time.sec, subsec))
             # If we are any of the editing modes flash the screen on and off and upate clock
             display_on = not display_on
 
-            print(f"Setting Time as {clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02} ")
+            print(f"Setting Clock Time as {clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02} ")
+            mode_string = 'EDITING TIME'
+            time_string = f'{clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02}'
+
+        elif clock.edit_mode == EditMode.ALARM_EDIT:
+            piezzo_pwm.duty(0)
+
+            # If we are any of the editing modes flash the screen on and off and upate clock
+            display_on = not display_on
+            print(f"Setting Alarm Time as {clock.alarm.hour:02}:{clock.alarm.min:02}:{clock.alarm.sec:02} ")
+            mode_string = 'EDITING ALARM'
+            time_string = f'{clock.alarm.hour:02}:{clock.alarm.min:02}:{clock.alarm.sec:02}'
+       
+        elif clock.edit_mode == EditMode.ALARM_BLARING:
+            display_on = True
+            piezzo_pwm.duty(512)
+            print(f"ALARM BLARING")
+            mode_string = 'ALARM BLARING'
+            time_string = f''            
 
         else:
+            piezzo_pwm.duty(0)
             display_on = True
             # If we are in normal display mode get RTC time and update clock module
             year, month, day, weekday, hour, min, sec, subsec = rtc.datetime()
             clock.curr_time.set_time(hour, min, sec)
             print(f"Displaying {clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02} ")
+            mode_string = 'DISPLAYING TIME'
+            time_string = f'{clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02}'
         
         if display_on:
             display.poweron()
@@ -143,12 +169,9 @@ def main():
             display.poweroff()
 
         # Update clock every 1/4 sec
-        display_string = f'{clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02}'
         display.fill(0)
-        display.text(display_string,0,15,1)
-
-        if(clock.edit_mode == EditMode.ALARM_EDIT):
-            display.text("ALARM", 0, 0, 1)
+        display.text(mode_string,0,0,1)
+        display.text(time_string,0,15,1)
 
         display.contrast(brightness)
         display.show()

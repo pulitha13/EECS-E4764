@@ -9,7 +9,7 @@ from clock_module import ClockModule, EditMode
 SDA_PIN = 4
 SCL_PIN = 5
 PIEZZO_PIN = 2
-BUTTON_PIN = 0
+BUTTON_PIN = 16
 OLED_BUTTON_A = 14
 OLED_BUTTON_B = 13
 OLED_BUTTON_C = 12
