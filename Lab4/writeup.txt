@@ -1,0 +1,22 @@
+Q: How to wire up the accelerometer to the board
+
+A: Connect the following pins as labeled on the respective devices
+
+ACCEL		ESP
+SDA <---------> MO
+SCL <---------> SCK
+GND <---------> GND
+VIN <---------> 3v
+CS <---------> GPIO OF CHOICE (15 in our case)
+DO <---------> MI
+
+Q: How the read/write is performed
+
+A: The ESP MC sends a "READ" message to the registers of the ACCEL that correspond to the XYZ coordinates. 
+After this message is recieved, all while CS is held low, the ESP will send the data on the MI line.
+
+Ex. 
+
+ESP ----- 0xf2 ---> ACCEL 
+
+ACCEL ---(6 bytes of data [x0, x1, y0, y1, z0, z1]) --> ESP
