@@ -2,3 +2,4 @@ venv
 .vscode
 typings
 .DS_Store
+.gradio
