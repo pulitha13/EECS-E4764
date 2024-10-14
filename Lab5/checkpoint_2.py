@@ -7,7 +7,10 @@ import network
 import socket
 import errno
 import ujson
+import urequests
 
+WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
+WEATHER_API_KEY = '058ef319596c10d77118e888070ca3da'
 
 # Pin connections
 SDA_PIN = 4
@@ -25,21 +28,69 @@ Password = "silvertune468"
 # Socket
 CMD_PORT = 7000
 
-clock = ClockModule()
 station = network.WLAN(network.STA_IF)
 
-def edit_clock(hour, min, sec):
-    global clock
-    # If button was pressed toggle change time mode
-    print("Editing watch time")
-    clock.curr_time.set_time(hour, min, sec)
+class SmartWatch():
+    def __init__(self):
+        self.clock = ClockModule()
+        self.watch_mode = 'clock'
+        self.display_on = True
+        self.display_string = [""]
 
-def edit_alarm(hour, min, sec):
-    global debouncer
-    global clock
-    # If button was pressed toggle change time mode
-    print("Cycling ALARM EDIT mode")
-    clock.alarm.set_time(hour, min, sec)
+        print("Initializing PWM")
+        self.piezzo_pwm = PWM(Pin(PIEZZO_PIN), freq=500, duty=0)
+        
+        print("Initializing I2C and Display")
+        i2c = I2C(sda=Pin(SDA_PIN), scl=Pin(SCL_PIN))
+        self.display = ssd1306.SSD1306_I2C(128, 32, i2c)
+
+        print("Initializing RTC")
+        self.rtc = RTC()
+        self.time = (2024,9,27,5,12,12,12,0)
+        self.rtc.datetime()
+
+        return
+
+    def edit_alarm(self, hour, min, sec):
+        # If button was pressed toggle change time mode
+        print("Cycling ALARM EDIT mode")
+        self.clock.alarm.set_time(hour, min, sec)
+
+    def service_display(self, start_x = 0, start_y= 0, z = 1):
+
+        self.display.fill(0)  # Clear the display before updating
+
+        max_width = 128  # OLED width
+        max_height = 32   # OLED height
+
+        for i, string in enumerate(self.display_string):
+            self.display.text(string, start_x % max_width, (int(start_y/4) + i * 15) % max_height,1)
+
+        if self.display_on == True:
+            self.display.poweron()
+        else:
+            self.display.poweroff()
+
+        self.display.show()
+
+    def service_clock(self):
+
+        self.clock.check_alarm_blaring()
+        
+        if self.clock.alarm_blaring:
+            self.piezzo_pwm.duty(512)
+            # print(f"ALARM BLARING")
+            self.watch_mode = 'alarm_blaring'
+            self.display_string = ['ALARM BLARING']   
+        else:
+            self.piezzo_pwm.duty(0)
+            # If we are in normal display mode get RTC time and update clock module
+            year, month, day, weekday, hour, min, sec, subsec = self.rtc.datetime()
+            self.clock.curr_time.set_time(hour, min, sec)
+            # print(f"Displaying {clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02} ")
+    
+    def get_clock_string(self):
+        return ['DISPLAYING TIME', f'{self.clock.curr_time.hour:02}:{self.clock.curr_time.min:02}:{self.clock.curr_time.sec:02}']
             
 def connect_to_wifi(ssid, password):
     station.active(True)
@@ -65,8 +116,48 @@ def open_command_socket(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((ip, port))
     s.listen(1)
-    s.settimeout(.1)
+    s.settimeout(.25)
     return s
+
+def get_lat_long():
+    url = "http://ip-api.com/json"
+    
+    try:
+        response = urequests.get(url)
+        
+        # Check if the response was successful (status code 200)
+        if response.status_code != 200:
+            raise Exception(f"Error {response.status_code}: Unable to retrieve location data.")
+        
+        data = ujson.loads(response.text)
+
+        latitude = data.get('lat')
+        longitude = data.get('lon')
+
+        # print('Latitude:', latitude, 'Longitude:', longitude)
+        
+        return latitude, longitude
+    except Exception as e:
+        print('Error retrieving location:', e)
+        return 0, 0
+    
+def get_weather(latitude, longitude):
+    url = f"{WEATHER_URL}?lat={latitude}&lon={longitude}&appid={WEATHER_API_KEY}&units=metric"  # Metric for Celsius
+
+    try:
+        response = urequests.get(url)
+        if response.status_code != 200:
+            raise Exception(f"Error {response.status_code}: Unable to retrieve weather data.")
+        
+        data = ujson.loads(response.text)
+
+        temperature = data['main']['temp']
+        description = data['weather'][0]['description']
+
+        return temperature, description
+    
+    except Exception as e:
+        print(f"Exception: {e}")
 
 def check_for_commands(s):
     try:
@@ -86,88 +177,81 @@ def check_for_commands(s):
             print(f"An error occurred: {e}")
     
     return None
-
-
-
-
-def service_display(display, text, display_on, start_x = 0, start_y= 0, z = 1):
-
-    display.fill(0)  # Clear the display before updating
-
-    max_width = 128  # OLED width
-    max_height = 32   # OLED height
-
-    for i, string in enumerate(text):
-        display.text(string, start_x % max_width, (int(start_y/4) + i * 15) % max_height,1)
-
-    if display_on == True:
-        display.poweron()
-    else:
-        display.poweroff()
-
-    display.show()
-
-'''
-Depending on the current state of the clock module, updates the clock module based
-on the on chip RTC, updates the RTC based on user edits, updates the alarm based on
-user edits, or "blares" the alarm. The state of what should be displayed on the OLED
-device is returned, along with any variables that were updated during servicing the clock
-'''
-def service_clock(rtc, display_on, piezzo_pwm):
-
-    clock.check_alarm_blaring()
     
-    if clock.alarm_blaring:
-        display_on = True
-        piezzo_pwm.duty(512)
-        # print(f"ALARM BLARING")
-        display_string = 'ALARM BLARING'     
-    else:
-        piezzo_pwm.duty(0)
-        display_on = True
-        # If we are in normal display mode get RTC time and update clock module
-        year, month, day, weekday, hour, min, sec, subsec = rtc.datetime()
-        clock.curr_time.set_time(hour, min, sec)
-        # print(f"Displaying {clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02} ")
-        display_string = ['DISPLAYING TIME', f'{clock.curr_time.hour:02}:{clock.curr_time.min:02}:{clock.curr_time.sec:02}']
-
-    return display_on, display_string
+def parse_json_cmd(sw, json_cmd):
     
-def parse_json_cmd(json_cmd, display_on, ):
-    
-    cmd = ujson.loads(json_cmd)
+    # If alarm blaring, we must change alarm 
+    if (sw.watch_mode == 'alarm_blaring' and json_cmd['cmd'] != 'set_alarm'):
+        return
 
-    # return cmd_dict[cmd]
+    if (json_cmd['cmd'] == 'screen_on'):
+        sw.display_on = True
+
+    elif (json_cmd['cmd'] == 'screen_off'):
+        sw.display_on = False
+    
+    elif (json_cmd['cmd'] == 'display_time'):
+        sw.watch_mode = 'clock'
+        print("Watch in clock mode")
+    
+    elif (json_cmd['cmd'] == 'display_message'):
+        sw.watch_mode = 'message'
+        sw.display_string = [json_cmd['args'][0]]
+        print("Watch in message mode")
+    
+    elif (json_cmd['cmd'] == 'set_alarm'):
+        args = json_cmd['args']
+    
+        # ADD PARAM SAFETY HERE
+        sw.watch_mode = 'clock'
+        sw.clock.alarm.set_time(args[0], args[1], args[2])
+   
+    elif (json_cmd['cmd'] == 'display_location'):
+        sw.watch_mode = 'location'
+        sw.display_string = ['', '']
+        print("Watch in location mode")
+
+    elif (json_cmd['cmd'] == 'display_weather'):
+        sw.watch_mode = 'weather'
+        sw.display_string = ['', '']
+        print("Watch in weather mode")
+
 
 def main():
-    print("Initializing PWM")
-    piezzo_pwm = PWM(Pin(PIEZZO_PIN), freq=500, duty=0)
-    
-    print("Initializing I2C and Display")
-    i2c = I2C(sda=Pin(SDA_PIN), scl=Pin(SCL_PIN))
-    display = ssd1306.SSD1306_I2C(128, 32, i2c)
-
-    print("Initializing RTC")
-    rtc = RTC()
-    time = (2024,9,27,5,12,12,12,0)
-    rtc.datetime()
-
-    # Local variables to loop
-    display_on = True
 
     ip = connect_to_wifi(SSID, Password)
 
     s = open_command_socket(ip, CMD_PORT)
 
+    sw = SmartWatch()
+
     while True:
+
+        sw.service_clock()
 
         json_cmd = check_for_commands(s)
 
-        display_on, display_string = service_clock(rtc, display_on, piezzo_pwm)
+        if(json_cmd):
+            parse_json_cmd(sw, json_cmd)
 
-        service_display(display, display_string, display_on)
+        try:
+            if (sw.watch_mode == 'clock'):
+                sw.display_string = sw.get_clock_string()
+            elif (sw.watch_mode == 'location'):
+                lat, long = get_lat_long()
+                sw.display_string[0] = f'Lat: {lat:3.3f}'
+                sw.display_string[1] = f'Long: {long:3.3f}'
+            elif (sw.watch_mode == 'weather'):
+                lat, long = get_lat_long()
+                temp, desc = get_weather(lat, long)
+                sw.display_string[0] = f'Temp: {temp} C'
+                sw.display_string[1] = f'{desc}'
+        except Exception as e:
+            print(f'Exception: {e}')
 
-        utime.sleep(0.125)
+        sw.service_display()
+
+        # utime.sleep(0.125)
 
 
 if __name__ == '__main__':
