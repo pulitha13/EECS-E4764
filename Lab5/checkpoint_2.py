@@ -8,6 +8,7 @@ import socket
 import errno
 import ujson
 import urequests
+import ntptime
 
 WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
 WEATHER_API_KEY = '058ef319596c10d77118e888070ca3da'
@@ -22,8 +23,8 @@ OLED_BUTTON_B = 13
 OLED_BUTTON_C = 12
 
 # Wifi credentials
-SSID = "SpectrumSetup-57F5"
-Password = "silvertune468"
+SSID = "Columbia University"
+Password = ""
 
 # Socket
 CMD_PORT = 7000
@@ -32,10 +33,14 @@ station = network.WLAN(network.STA_IF)
 
 class SmartWatch():
     def __init__(self):
-        self.clock = ClockModule()
         self.watch_mode = 'clock'
         self.display_on = True
         self.display_string = [""]
+
+        ntptime.settime()
+        (year, month, mday, hour, min, sec, weekday, yearday) = time.localtime()
+        hour = (hour - 4) % 24
+        print(f"Setting time to ({hour}, {min}, {sec})")
 
         print("Initializing PWM")
         self.piezzo_pwm = PWM(Pin(PIEZZO_PIN), freq=500, duty=0)
@@ -46,8 +51,9 @@ class SmartWatch():
 
         print("Initializing RTC")
         self.rtc = RTC()
-        self.time = (2024,9,27,5,12,12,12,0)
-        self.rtc.datetime()
+        self.time = (2024,9,27,5,hour,min,sec,0)
+        self.rtc.datetime((year, month, mday, weekday, hour, min, sec, 0))
+        self.clock = ClockModule(hour, min, sec)
 
         return
 
@@ -205,6 +211,7 @@ def parse_json_cmd(sw, json_cmd):
         # ADD PARAM SAFETY HERE
         sw.watch_mode = 'clock'
         sw.clock.alarm.set_time(args[0], args[1], args[2])
+        print(f"Setting alarm to {sw.clock.alarm.hour}:{sw.clock.alarm.min}:{sw.clock.alarm.sec}")
    
     elif (json_cmd['cmd'] == 'display_location'):
         sw.watch_mode = 'location'

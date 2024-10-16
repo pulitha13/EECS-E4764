@@ -6,6 +6,7 @@ import socket
 import json
 
 POE_API_KEY = '2-j_yibA8pbfozuVugcd8qTYAC-4Iu4XHNEOtuEV5qE'
+IP = '10.206.51.0'
 CMD_PORT = 7000
 prompt_header = """
 
@@ -13,6 +14,7 @@ You are a voice assistant for a smartwatch. Interprete the user's command and re
 a JSON object (no markdown) that calls specific functions for the smartwatch. The available functions are:
 
 - Turn on the screen : {cmd: screen_on, args:[]}
+- Turn off the screen : {cmd: screen_off, args:[]}
 - Displays the time on screen : {cmd: display_time, args:[]}
 - Displays a message on screen (where message is a string) : {cmd: display_message, args:[message]}
 - Sets an alarm for the watch (the arguements hour, minute, second are in military time) : {cmd: set_alarm, args:[hour, minute, second]}
@@ -53,7 +55,7 @@ def send_command(command):
 			# Create a TCP/IP socket
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-		server_address = ('192.168.1.81', CMD_PORT)  # Example server and port
+		server_address = (IP, CMD_PORT)  # Example server and port
 		sock.connect(server_address)
 
 		json.loads(command)

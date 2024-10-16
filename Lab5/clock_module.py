@@ -32,8 +32,8 @@ class TimeEntity:
         self.hour = hour
 
 class ClockModule:
-    def __init__(self):
-        self.curr_time = TimeEntity()
+    def __init__(self, hour, min, sec):
+        self.curr_time = TimeEntity(hour, min, sec)
         self.alarm = TimeEntity(23, 59, 59)
         self.alarm_blaring = False
         return
