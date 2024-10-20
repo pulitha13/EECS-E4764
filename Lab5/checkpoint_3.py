@@ -28,7 +28,7 @@
 import asyncio
 import fastapi_poe as fp
 
-POE_API_KEY = '2-j_yibA8pbfozuVugcd8qTYAC-4Iu4XHNEOtuEV5qE'
+POE_API_KEY = ''
 
 prompt_header = """
 
