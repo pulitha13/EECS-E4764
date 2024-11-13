@@ -6,7 +6,7 @@ import socket
 import json
 
 POE_API_KEY = '2-j_yibA8pbfozuVugcd8qTYAC-4Iu4XHNEOtuEV5qE'
-IP = '10.206.73.223'
+IP = '10.206.7.36'
 CMD_PORT = 7000
 prompt_header = """
 

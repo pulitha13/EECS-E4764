@@ -56,7 +56,7 @@ class ADXL345:
     def adxl345_read_xyz(self):
         self.cs(0) # Select device
         read_buffer = bytearray(6)
-        print(f"Writing {bytearray([SPI_READ| SPI_MULTIPLE_BYTES | 0x32])} to accel")
+        # print(f"Writing {bytearray([SPI_READ| SPI_MULTIPLE_BYTES | 0x32])} to accel")
         self.spi.write(bytearray([SPI_READ| SPI_MULTIPLE_BYTES | 0x32])) #SEND READ COMMAND
         self.spi.readinto(read_buffer) # read into buffer
         self.cs(1) # Deselect device

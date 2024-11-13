@@ -12,7 +12,10 @@ import ujson
 import urequests
 import ntptime
 
-CLOUD_URL = "http://127.0.0.1:5000"
+
+SERVER_IP = "34.135.132.12"
+CLOUD_DATA_URL = f"http://{SERVER_IP}:5000/data"
+CLOUD_GET_URL = f"http://{SERVIER_IP}:5000/get_data"
 WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
 WEATHER_API_KEY = '058ef319596c10d77118e888070ca3da'
 
@@ -20,7 +23,7 @@ WEATHER_API_KEY = '058ef319596c10d77118e888070ca3da'
 SDA_PIN = 4
 SCL_PIN = 5
 PIEZZO_PIN = 2
-BUTTON_PIN = 14
+BUTTON_PIN = 0
 # OLED_BUTTON_A = 14
 OLED_BUTTON_B = 13
 OLED_BUTTON_C = 12
@@ -83,6 +86,9 @@ class SmartWatch():
         self.adxl345 = ADXL345(spi_bus=1, cs_pin=15)
         self.adxl345.initialize_device()
 
+        # Initialize ADC
+        self.adc = ADC(0)
+
         return
 
     def record_gesture_data(self):
@@ -101,7 +107,7 @@ class SmartWatch():
             x, y, z = self.adxl345.adxl345_read_xyz()
             
             # Append data in CSV format
-            readings.append(f"{utime.ticks_ms() - start_time},{x},{y},{z},{letter}")
+            readings.append(f"{utime.ticks_ms() - start_time},{x},{y},{z},X")
             
             # Wait for the next sample based on sampling frequency
             utime.sleep_ms(20)
@@ -111,8 +117,10 @@ class SmartWatch():
         json_data = {
             'readings': readings
         }
-        print(ujson.dumps(json_data))
-        return ujson.dumps(json_data)
+
+        dump = ujson.dumps(json_data)
+        # print(dump)
+        return dump
 
 
     def edit_alarm(self, hour, min, sec):
@@ -123,6 +131,7 @@ class SmartWatch():
     def service_display(self, start_x = 0, start_y= 0, z = 1):
 
         self.display.fill(0)  # Clear the display before updating
+        brightness = self.adc.read_u16() >> 8
 
         max_width = 128  # OLED width
         max_height = 32   # OLED height
@@ -135,6 +144,7 @@ class SmartWatch():
         else:
             self.display.poweroff()
 
+        self.display.contrast(brightness)
         self.display.show()
 
     def service_clock(self):
@@ -160,7 +170,7 @@ class SmartWatch():
         # Send data to cloud
         try:
             # Send data to the Flask server
-            response = urequests.post(CLOUD_URL + '/data', json=data)
+            response = urequests.post(CLOUD_DATA_URL, json=data)
             if response.status_code == 200:
                 print(f"Data sent successfully")
             else:
@@ -173,17 +183,16 @@ class SmartWatch():
         # Get letter from cloud
         try:
             # Send data to the Flask server
-            response = urequests.get(CLOUD_URL + '/get_data')
+            response = urequests.get(CLOUD_GET_URL)
             if response.status_code == 200:
                 print(f"Got letter successfully")
             else:
                 print("Failed to send data, status code:", response.status_code)
-            response.close()
 
         except Exception as e:
             print("An error occurred:", e) 
 
-        return response['letter'] 
+        return response.json()['letter'] 
         
 
     def update_write_string(self, string):
@@ -308,6 +317,7 @@ def parse_json_cmd(sw, json_cmd):
     elif (json_cmd['cmd'] == 'write_message'):
         sw.watch_mode = 'write'
         sw.display_string = ['Message:', '']
+        letter_update['new_request'] = 0
         print("Watch in write mode")
     
     elif (json_cmd['cmd'] == 'set_alarm'):
