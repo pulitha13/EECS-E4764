@@ -5,7 +5,7 @@ import fastapi_poe as fp
 import socket
 import json
 
-POE_API_KEY = '2-j_yibA8pbfozuVugcd8qTYAC-4Iu4XHNEOtuEV5qE'
+POE_API_KEY = ''
 IP = '10.206.73.223'
 CMD_PORT = 7000
 prompt_header = """
