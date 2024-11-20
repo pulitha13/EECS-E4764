@@ -92,23 +92,24 @@ def show_data():
 
     data = pd.DataFrame(most_recent_doc['readings'])
     X = data.to_numpy()[:, 0:-1]
-    X = X[:76]
+    X = X[:75]
 
     # Convert X to a numpy array
     X = np.array(X).astype(float)
 
     # Define different scalers for different columns
-    scaler_first_column = MinMaxScaler(feature_range=(0, 1))  # Scaling first column to [0, 1]
+    # scaler_first_column = MinMaxScaler(feature_range=(0, 1))  # Scaling first column to [0, 1]
     scaler_other_column = MinMaxScaler(feature_range=(-1, 1))  # Scaling first column to [0, 1]
 
-    X[:, 0:1] = scaler_first_column.fit_transform(X[:, 0:1])
+    # X[:, 0:1] = scaler_first_column.fit_transform(X[:, 0:1])
     X[:, 1:] = scaler_other_column.fit_transform(X[:, 1:])
 
-    X = X.reshape(1, 76*4)
-    print(X)
+    X = X[:, 1:].reshape(1, 75*3)
+    # X = X.reshape(1, 75*3)
+    print(X.shape)
 
     from pickle import load
-    with open("model_v0.pkl", "rb") as f:
+    with open("model_v1.pkl", "rb") as f:
         random_forest = load(f)
     
     prediction = random_forest.predict(X)
