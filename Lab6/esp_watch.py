@@ -15,7 +15,7 @@ import ntptime
 
 SERVER_IP = "34.135.132.12"
 CLOUD_DATA_URL = f"http://{SERVER_IP}:5000/data"
-CLOUD_GET_URL = f"http://{SERVIER_IP}:5000/get_data"
+CLOUD_GET_URL = f"http://{SERVER_IP}:5000/get_data"
 WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather"
 WEATHER_API_KEY = '058ef319596c10d77118e888070ca3da'
 

@@ -1,0 +1,8 @@
+C --> 2 face up
+O --> 4 face up
+L --> 1 face up 
+U --> 3 face up
+M --> 3 face up
+B --> 1 face up (b) circuit
+I --> 4 face up 
+A --> 2 face up
