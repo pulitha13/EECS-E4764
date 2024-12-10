@@ -21,3 +21,9 @@ mpfshell -nc "open <PORT>; mput [FILES]"
 mpfshell -nc "open <PORT>; mput .*\.py"
 
 ```
+
+Example of how to send JSON command using bash
+
+```
+echo -n '{"cmd": "display_time", "args": []}' | nc 10.206.92.248 7000
+```
