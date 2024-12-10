@@ -11,6 +11,9 @@
 # Partial Port to Micropython:
 # Micropython PN532 NFC/RFID control library.
 # Author: Carlos Gil Gonzalez
+
+# Extended read/write capabilites for Mifare cards:
+# Author: Joshua Mathew
 """
 Micropython PN532 NFC/RFID control library (SPI)
 https://github.com/Carglglz/NFC_PN532_SPI
@@ -33,23 +36,23 @@ _HOSTTOPN532 = const(0xD4)
 _PN532TOHOST = const(0xD5)
 
 # PN532 Commands
-_COMMAND_DIAGNOSE = const(0x00)
+# _COMMAND_DIAGNOSE = const(0x00)
 _COMMAND_GETFIRMWAREVERSION = const(0x02)
-_COMMAND_GETGENERALSTATUS = const(0x04)
-_COMMAND_SETSERIALBAUDRATE = const(0x10)
-_COMMAND_SETPARAMETERS = const(0x12)
+# _COMMAND_GETGENERALSTATUS = const(0x04)
+# _COMMAND_SETSERIALBAUDRATE = const(0x10)
+# _COMMAND_SETPARAMETERS = const(0x12)
 _COMMAND_SAMCONFIGURATION = const(0x14)
 
 _COMMAND_INLISTPASSIVETARGET = const(0x4A)
 
 _COMMAND_INDATAEXCHANGE = const(0x40)
-_COMMAND_INCOMMUNICATETHRU = const(0x42)
+# _COMMAND_INCOMMUNICATETHRU = const(0x42)
 
 
-_RESPONSE_INDATAEXCHANGE = const(0x41)
-_RESPONSE_INLISTPASSIVETARGET = const(0x4B)
+# _RESPONSE_INDATAEXCHANGE = const(0x41)
+# _RESPONSE_INLISTPASSIVETARGET = const(0x4B)
 
-_WAKEUP = const(0x55)
+# _WAKEUP = const(0x55)
 
 _MIFARE_ISO14443A = const(0x00)
 
@@ -70,7 +73,7 @@ _FRAME_START = b'\x00\x00\xFF'
 _SPI_STATREAD = const(0x02)
 _SPI_DATAWRITE = const(0x01)
 _SPI_DATAREAD = const(0x03)
-_SPI_READY = const(0x01)
+# _SPI_READY = const(0x01)
 
 
 def _reset(pin):
@@ -100,7 +103,7 @@ def reverse_bit(num):
     return result
 
 
-class PN532:
+class PN532_Core:
     """Driver for the PN532 connected over SPI. Pass in a hardware or bitbang
     SPI device & chip select digitalInOut pin. Optional IRQ pin (not used),
     reset pin and debugging output."""
@@ -353,7 +356,7 @@ class PN532:
         # Check first response is 0x00 to show success.
         if response[0] != 0x00:
             return None
-        # Return first 4 bytes since 16 bytes are always returned.
+        
         return response[1:]
     
     def mifare_classic_write_block(self, block_number, data):
@@ -406,31 +409,3 @@ class PN532:
             _COMMAND_INDATAEXCHANGE, params=params, response_length=1
         )
         return response[0] == 0x00
-
-    def mifare_classic_multi_write_block(self, uid, start_block, data):
-        """Writes to as many successive blocks as necessary until either
-        device is out of memory or the MAX_WRITE_AMT has been hit
-        """
-        block_offset = 0
-        for data_idx in range(0, len(data), 16):
-            
-            data_chunk = data[data_idx:data_idx + 16]
-
-            # Null terminate the end
-            while (len(data_chunk) < 16):
-                data_chunk.append(0x00)
-
-            # Dont write to the security blocks
-            if ((start_block + block_offset)%4 == 3):
-                block_offset = block_offset + 1
-
-            block = start_block + block_offset
-            print(f"Authenticating block {block}")
-            if(not self.mifare_classic_authenticate_block(uid=uid, block_number=block)):
-                raise RuntimeError(f'Could not authenticate block {block}')
-
-            print(f"Writing to the {block}th block = {data_chunk}")
-            if(not self.mifare_classic_write_block(block, data_chunk)):
-                raise RuntimeError(f'Could not successfully write {data_chunk} to block {block}')
-
-            block_offset = block_offset + 1
