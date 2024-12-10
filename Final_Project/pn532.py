@@ -80,3 +80,50 @@ class PN532(core.PN532_Core):
 				print('Found card with UID:', [hex(i) for i in uid])
 				print('Number_id: {}'.format(string_ID))
 		return uid
+	
+"""    
+
+Below this line is example usage of the above class
+
+    print("Free memory (after init):", gc.mem_free())
+
+    print(f"Waiting {CARD_DET_TIMEOUT/1000}s for a card to appear...")
+    uid = pn532.read_nfc(CARD_DET_TIMEOUT)
+
+    # Write to one block...
+    if(pn532.mifare_classic_authenticate_block(uid=uid, block_number=2)):
+        print("Successfully authenticated block 2")
+        
+        print("Reading block 2...")
+        read_data = pn532.mifare_classic_read_block(block_number=2)    
+        print("Result: ", read_data)
+
+        write_data = bytearray(16)
+        write_data[:len(b"hello world")] = b"hello world"
+        
+        print("Writing \"hello world\" to block 2...")
+        res = pn532.mifare_classic_write_block(block_number=2, data=write_data)
+        print ("Result: ", res)
+
+        print("Reading block 2...")
+        read_data = pn532.mifare_classic_read_block(block_number=2)
+        print("Result: ", read_data.split(b'\x00', 1)[0].decode('utf-8'))
+
+    print("Sleeping for 5s")
+    time.sleep(5)
+
+    # Try writing a big boi string
+    print(f"Waiting {CARD_DET_TIMEOUT/1000.0}s for a card to appear...")
+    uid = pn532.read_nfc(CARD_DET_TIMEOUT)
+    print("Trying to write a long string")
+    pn532.mifare_classic_multi_write_block(uid, 2, bytearray(b"The quick brown fox jumps over the lazy dog"))
+
+    print("Sleeping for 5s")
+    time.sleep(5)
+
+    # Try reading it back a big boi string
+    print(f"Waiting {CARD_DET_TIMEOUT/1000.0}s for a card to appear...")
+    uid = pn532.read_nfc(CARD_DET_TIMEOUT)
+    print("Trying to read a long string")
+    read_data = pn532.mifare_classic_multi_read_block(uid, 2, 1+len("The quick brown fox jumps over the lazy dog"))
+    print("Result: ", read_data.split(b'\x00', 1)[0].decode('utf-8'))"""

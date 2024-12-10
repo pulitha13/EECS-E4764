@@ -17,8 +17,10 @@ Password = ""
 # SSID = "SpectrumSetup-57F5"
 # Password = "silvertune468"
 
-# Socket
+# Socket Info
 CMD_PORT = 7000
+
+SERVER_IP = "34.135.132.12"
 RESP_PORT = 7001
 
 CARD_DET_TIMEOUT = 5000
@@ -43,17 +45,16 @@ def connect_to_wifi(station, ssid, password):
     
     return station.ifconfig()[0]
 
-
 def check_for_commands(s):
     try:
         client_sock, client_addr = s.accept()
         print(f"Connected to client socket: {client_addr}")
-
         data = client_sock.recv(1024).decode('utf-8')
+        print(f"Here")
         data = ujson.loads(data)
-        print(f"Recieved command: {data['cmd']}")
-        print(f"Recieved args: {data['args']}")
-        return data
+        print(f"Recieved data: {data}")
+        # print(f"Recieved args: {data['args']}")
+        return client_sock, data
 
     except Exception as e:
         if isinstance(e, OSError) and (e.errno == errno.EAGAIN or e.errno == errno.ETIMEDOUT):
@@ -61,16 +62,27 @@ def check_for_commands(s):
         else:
             print(f"An error occurred: {e}")
     
-    return None
+    return None, None
 
-def send_response():
-    
+def send_response(s, response):
+
+    try:
+
+        ujson.loads(response)
+        s.sendall(response.encode('utf-8'))
+        print("Sent: ", response)
+
+    except Exception as e:
+        print(f"error: {e}")
+    finally:
+        # Close the client socket
+        s.close()
 
 def open_command_socket(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((ip, port))
     s.listen(1)
-    s.setblocking(False)
+    s.settimeout(1)
     return s
 
 def main():
@@ -93,56 +105,12 @@ def main():
     # Configure PN532 to communicate with MiFare cards
     pn532.SAM_configuration()
 
-    print("Free memory (after init):", gc.mem_free())
-
-    print(f"Waiting {CARD_DET_TIMEOUT/1000}s for a card to appear...")
-    uid = pn532.read_nfc(CARD_DET_TIMEOUT)
-
-    # Write to one block...
-    if(pn532.mifare_classic_authenticate_block(uid=uid, block_number=2)):
-        print("Successfully authenticated block 2")
-        
-        print("Reading block 2...")
-        read_data = pn532.mifare_classic_read_block(block_number=2)    
-        print("Result: ", read_data)
-
-        write_data = bytearray(16)
-        write_data[:len(b"hello world")] = b"hello world"
-        
-        print("Writing \"hello world\" to block 2...")
-        res = pn532.mifare_classic_write_block(block_number=2, data=write_data)
-        print ("Result: ", res)
-
-        print("Reading block 2...")
-        read_data = pn532.mifare_classic_read_block(block_number=2)
-        print("Result: ", read_data.split(b'\x00', 1)[0].decode('utf-8'))
-
-    print("Sleeping for 5s")
-    time.sleep(5)
-
-    # Try writing a big boi string
-    print(f"Waiting {CARD_DET_TIMEOUT/1000.0}s for a card to appear...")
-    uid = pn532.read_nfc(CARD_DET_TIMEOUT)
-    print("Trying to write a long string")
-    pn532.mifare_classic_multi_write_block(uid, 2, bytearray(b"The quick brown fox jumps over the lazy dog"))
-
-    print("Sleeping for 5s")
-    time.sleep(5)
-
-    # Try reading it back a big boi string
-    print(f"Waiting {CARD_DET_TIMEOUT/1000.0}s for a card to appear...")
-    uid = pn532.read_nfc(CARD_DET_TIMEOUT)
-    print("Trying to read a long string")
-    read_data = pn532.mifare_classic_multi_read_block(uid, 2, 1+len("The quick brown fox jumps over the lazy dog"))
-    print("Result: ", read_data.split(b'\x00', 1)[0].decode('utf-8'))
-
     while True:
-        json_cmd = check_for_commands(s)
+        client_sock, json_cmd = check_for_commands(s)
         
         if (json_cmd):
             print("Received packet: ", json_cmd)
-
-            send_response()
+            send_response(client_sock, ujson.dumps({'name' : 'Sprite'}))
 
 
 if __name__ == '__main__':

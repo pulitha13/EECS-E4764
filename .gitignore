@@ -4,3 +4,4 @@ typings
 .DS_Store
 .gradio
 Letters
+*.mp3

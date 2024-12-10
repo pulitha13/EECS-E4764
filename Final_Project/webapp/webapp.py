@@ -16,9 +16,9 @@ prompt_header = """
 
 You are a voice assistant for a blind human being. They are telling you information that they want to write down on a very 
 very  short note paper. These messages should be condensable to about 256 characters. You will interpret this message in a 
-JSON object with a timestamp in the following way:
+JSON object (no markdown) with a timestamp in the following way:
 
-{name:Object_name, time: timestamp, payload: message}
+{"name":Object_name, "time": timestamp, "payload": message}
 
 - If the user is asking a question or seeking information, set the `payload` to "read."
 - If the user is making a request or giving an instruction, set the `payload` to "write."
@@ -30,7 +30,7 @@ that the user said.
 This is the user's command: 
 """
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 async def get_llm_response(prompt):
 
@@ -46,65 +46,59 @@ async def get_llm_response(prompt):
 
 
 def send_command(command):
-
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         esp_address = (IP, CMD_PORT)  # Example server and port
         sock.connect(esp_address)
-
+        print(command)
         json.loads(command)
         sock.sendall(command.encode('utf-8'))
         print("Sent: ", command)
 
     except Exception as e:
-        print("error: {e}")
+        print(f"send_command: error: {e}")
 
-    finally:
-        if sock:
-            sock.close()
+    return read_response(sock)
 
-def read_response():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #Bind the socket to the address and port
-    server_address = (IP, CMD_LIT_PORT)
-    sock.bind(server_address)
-    sock.listen(1)
-    print(f"Listening on {IP}:{CMD_LIT_PORT} for incoming connection and message...")
+    
 
-    while True:
-        # Wait for a connection
-        connection, client_address = sock.accept()
+def read_response(s):
+        
         try:
-            print(f"Connection established with {client_address}")
-
             #Receive the command (data sent by the client)
-            data = connection.recv(1024) #Max 1024 bytes
+            data = s.recv(1024) #Max 1024 bytes
 
             if data:
-                # json_data = json.loads(data.decode('utf-8'))
-                json_data = json.loads(data)
+                json_data = json.loads(data.decode('utf-8'))
                 message = json_data['name']
                 print(f"Received message, the scanned item is: {message}")
                 return message
             else:
                 print("No data received")
+                return None
+
         except Exception as e:
             print(f"Error: {e}")
+
         finally:
-            connection.close()
+            s.close()
     
 def process_input(audio):
 
     whisper_model = whisper.load_model("tiny.en")
     whisp_transcription = whisper_model.transcribe(audio)["text"]
-    llm_resp = asyncio.run(get_llm_response(whisp_transcription))
-    send_command(llm_resp)
-    read_resp = read_response()
-    audio_file = convert_text_to_speech(read_resp)
+    llm_resp = asyncio.run(get_llm_response(prompt_header+whisp_transcription))
+    print("llm_resp", llm_resp)
+    try:
+        response = send_command(llm_resp)
+    except Exception as e:
+        print(f'process_input: error: {e}')
+    audio_file = convert_text_to_speech(response)
     transcription = f"Transcribed response: {whisp_transcription}"
     llm_response = f"JSON interpretation: {llm_resp}"
-    smartwatch_response = f"Card Reader response: {read_resp}"
+    cardreader_response = f"Card Reader response: {response}"
 
-    return transcription, llm_response, smartwatch_response, audio_file
+    return transcription, llm_response, cardreader_response, audio_file
 
 ui = gr.Interface(
     inputs=[ gr.Audio(sources=["microphone"], type="filepath", label="Voice Input"),],
