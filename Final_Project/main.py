@@ -1,4 +1,4 @@
-from machine import Pin, SPI
+from machine import Pin, SPI, PWM
 import network
 import time
 import ujson
@@ -11,11 +11,11 @@ import pn532 as nfc
 print("Free memory:", gc.mem_free())
 
 # Wifi credentials
-# SSID = "Columbia University"
-# Password = ""
+SSID = "Columbia University"
+Password = ""
 
-SSID = "SpectrumSetup-57F5"
-Password = "silvertune468"
+# SSID = "SpectrumSetup-57F5"
+# Password = "silvertune468"
 
 # Socket Info
 CMD_PORT = 7000
@@ -143,6 +143,8 @@ def main():
     # Configure PN532 to communicate with MiFare cards
     pn532.SAM_configuration()
 
+    piezo_pwm = PWM(Pin(4), freq=500, duty=0)   # Piezo buzzer on pin 5
+
     while True:
 
         client_sock, json_cmd = check_for_commands(s)
@@ -151,12 +153,16 @@ def main():
             continue
 
         if (json_cmd['command'] == "read"):
+            piezo_pwm.duty(512)
             ret = user_attempt_read(pn532=pn532, data=json_cmd['payload'])
             send_response(client_sock, ujson.dumps(ret))
+            piezo_pwm.duty(0)
 
         elif (json_cmd['command'] == "write"):
+            piezo_pwm.duty(512)
             ret = user_attempt_write(pn532=pn532, data=json_cmd['payload'])
             send_response(client_sock, ujson.dumps(ret))
+            piezo_pwm.duty(0)
         
         else:
             print("Received packet: ", json_cmd)

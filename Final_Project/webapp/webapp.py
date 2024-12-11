@@ -9,14 +9,14 @@ import os
 import requests
 
 POE_API_KEY = ''
-IP = '192.168.1.81'
+IP = '10.206.111.21'
 CMD_PORT = 7000
 CMD_LIT_PORT = 7001
 prompt_header = """
 
-You are a voice assistant for a blind human being. They are telling you information that they want to write down on a very 
-very  short note paper. These messages should be condensable to about 256 characters. You will interpret this message in a 
-JSON object (no markdown) with a timestamp one of the following way:
+You are a voice assistant for a blind human being. They are either telling you about a label that they want to write on some object or asking
+to you to read data about that object. You will interpret what the user says and translate it into a JSON object (no markdown) that is less than
+256 bytes long one of the following ways:
 
 
 - If the user is asking a question or seeking information or saying something along the lines of "read this"
@@ -25,13 +25,14 @@ JSON object (no markdown) with a timestamp one of the following way:
 
 - If the user is making a request or giving an instruction
 
-{"payload": {"name": Object_name, "time": timestamp} , "command": "write"}
+{"payload": {"name": Object_name, "time": timestamp, "location": loc} , "command": "write"}
 
 - If the user's words are not parseable into the above two cases
 {"payload": {}, "command": "error"}
 
 The `Object_name` should be inferred from the user's words, and the `timestamp` should be the UTC time at which the message was recorded.
-Here, the timestamp variable is the UTC time at which the message was recorded.
+Here, the timestamp variable is the UTC time at which the message was recorded. `loc` should be inferred if the user mentions a location 
+that the object is being written to, however, if there is no location that can be inferred by the user just set `loc` to an empty string.
 
 This is the user's command: 
 
@@ -94,6 +95,9 @@ def generate_legible_response(json):
     string = ""
     if "name" in json:
         string += "This is a " + json["name"]
+    
+    if "location" in json and json['location']:
+        string += " that you stored in " + json['location']
 
     return string
 
