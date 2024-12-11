@@ -11,19 +11,19 @@ import pn532 as nfc
 print("Free memory:", gc.mem_free())
 
 # Wifi credentials
-SSID = "Columbia University"
-Password = ""
+# SSID = "Columbia University"
+# Password = ""
 
-# SSID = "SpectrumSetup-57F5"
-# Password = "silvertune468"
+SSID = "SpectrumSetup-57F5"
+Password = "silvertune468"
 
 # Socket Info
 CMD_PORT = 7000
 
-SERVER_IP = "34.135.132.12"
+SERVER_IP = "192.168.1.81"
 RESP_PORT = 7001
 
-CARD_DET_TIMEOUT = 5000
+CARD_DET_TIMEOUT = 10000
 
 def connect_to_wifi(station, ssid, password):
     station.active(True)
@@ -48,12 +48,12 @@ def connect_to_wifi(station, ssid, password):
 def check_for_commands(s):
     try:
         client_sock, client_addr = s.accept()
-        print(f"Connected to client socket: {client_addr}")
+        print(f"Server at {client_addr} connected to this socket")
         data = client_sock.recv(1024).decode('utf-8')
-        print(f"Here")
         data = ujson.loads(data)
         print(f"Recieved data: {data}")
-        # print(f"Recieved args: {data['args']}")
+        print(f"Recieved payload: {data['payload']}")
+        print(f"Recieved command: {data['command']}")
         return client_sock, data
 
     except Exception as e:
@@ -85,6 +85,44 @@ def open_command_socket(ip, port):
     s.settimeout(1)
     return s
 
+def user_attempt_write(pn532, data):
+
+    try:
+        print(f"Waiting {CARD_DET_TIMEOUT/1000.0}s for a card to appear...")
+        uid = pn532.read_nfc(CARD_DET_TIMEOUT)
+        
+        s = ujson.dumps(data)
+        print(f"Trying to write string of size {len(s)}")
+
+        pn532.mifare_classic_multi_write_block(uid, 2, bytearray(s, "utf-8"))
+
+    except Exception as e:
+        print(f"user_attempt_write: error: {e}")
+        return {"status": "fail", "message": "fail"}
+    
+    return {"status": "success", "message": "done"}
+
+def user_attempt_read(pn532, data):
+
+    try:
+        print(f"Waiting {CARD_DET_TIMEOUT/1000.0}s for a card to appear...")
+        uid = pn532.read_nfc(CARD_DET_TIMEOUT)
+        
+        print(f"Trying to read all data on card")
+
+        b = pn532.mifare_classic_multi_read_block(uid, 2, 256)
+        strings = [ba.decode("utf-8") for ba in b.split(b'\x00')]
+
+    except Exception as e:
+        print(f"user_attempt_write: error: {type(e)}, {e}")
+        return {"status": "fail", "message": "fail"}
+    
+    if (len(strings) > 0):
+        return {"status": "success", "message": ujson.loads(strings[0])}
+    
+    
+    return {"status:": "fail", "message": "tag is empty"}        
+
 def main():
 
     print("Free memory:", gc.mem_free())
@@ -106,11 +144,23 @@ def main():
     pn532.SAM_configuration()
 
     while True:
+
         client_sock, json_cmd = check_for_commands(s)
         
-        if (json_cmd):
+        if (json_cmd == None):
+            continue
+
+        if (json_cmd['command'] == "read"):
+            ret = user_attempt_read(pn532=pn532, data=json_cmd['payload'])
+            send_response(client_sock, ujson.dumps(ret))
+
+        elif (json_cmd['command'] == "write"):
+            ret = user_attempt_write(pn532=pn532, data=json_cmd['payload'])
+            send_response(client_sock, ujson.dumps(ret))
+        
+        else:
             print("Received packet: ", json_cmd)
-            send_response(client_sock, ujson.dumps({'name' : 'Sprite'}))
+            send_response(client_sock, ujson.dumps({'status' : 'fail', 'message': 'invalid command'}))
 
 
 if __name__ == '__main__':

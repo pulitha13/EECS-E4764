@@ -9,28 +9,33 @@ import os
 import requests
 
 POE_API_KEY = ''
-IP = '10.206.150.248'
+IP = '192.168.1.81'
 CMD_PORT = 7000
 CMD_LIT_PORT = 7001
 prompt_header = """
 
 You are a voice assistant for a blind human being. They are telling you information that they want to write down on a very 
 very  short note paper. These messages should be condensable to about 256 characters. You will interpret this message in a 
-JSON object (no markdown) with a timestamp in the following way:
+JSON object (no markdown) with a timestamp one of the following way:
 
-{"name":Object_name, "time": timestamp, "payload": message}
 
-- If the user is asking a question or seeking information, set the `payload` to "read."
-- If the user is making a request or giving an instruction, set the `payload` to "write."
-- The `Object_name` should be inferred from the user's command, and the `timestamp` should be the UTC time at which the message was recorded.
+- If the user is asking a question or seeking information or saying something along the lines of "read this"
 
-Here, the timestamp variable is the UTC time at which the message was recorded, and the message variable is the shortened message 
-that the user said.
+{"payload": {} , "command": "read"}
+
+- If the user is making a request or giving an instruction
+
+{"payload": {"name": Object_name, "time": timestamp} , "command": "write"}
+
+- If the user's words are not parseable into the above two cases
+{"payload": {}, "command": "error"}
+
+The `Object_name` should be inferred from the user's words, and the `timestamp` should be the UTC time at which the message was recorded.
+Here, the timestamp variable is the UTC time at which the message was recorded.
 
 This is the user's command: 
-"""
 
-# sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+"""
 
 async def get_llm_response(prompt):
 
@@ -60,29 +65,38 @@ def send_command(command):
 
     return read_response(sock)
 
-    
-
 def read_response(s):
         
-        try:
-            #Receive the command (data sent by the client)
-            data = s.recv(1024) #Max 1024 bytes
+    try:
+        #Receive the command (data sent by the client)
+        data = s.recv(1024) #Max 1024 bytes
 
-            if data:
-                json_data = json.loads(data.decode('utf-8'))
-                message = json_data['name']
-                print(f"Received message, the scanned item is: {message}")
-                return message
-            else:
-                print("No data received")
-                return None
+        if data:
+            json_data = json.loads(data.decode('utf-8'))
+            if(json_data['status'] == "success"):
+                return generate_legible_response(json_data['message'])
+            return "fail"
+        else:
+            print("No data received")
+            return None
 
-        except Exception as e:
-            print(f"Error: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
 
-        finally:
-            s.close()
-    
+    finally:
+        s.close()
+
+def generate_legible_response(json):
+
+    if(isinstance(json, str)):
+        return json
+
+    string = ""
+    if "name" in json:
+        string += "This is a " + json["name"]
+
+    return string
+
 def process_input(audio):
 
     whisper_model = whisper.load_model("tiny.en")

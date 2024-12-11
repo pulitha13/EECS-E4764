@@ -14,7 +14,8 @@ class PN532(core.PN532_Core):
 		block_offset = 0
 		for data_idx in range(0, len(data), 16):
 			
-			data_chunk = data[data_idx:data_idx + 16]
+			end = min(data_idx + 16, len(data))
+			data_chunk = data[data_idx:end]
 
 			# Null terminate the end
 			while (len(data_chunk) < 16):
@@ -38,7 +39,7 @@ class PN532(core.PN532_Core):
 
 			block_offset = block_offset + 1
 
-	def mifare_classic_multi_read_block(self, uid, start_block, size):
+	def mifare_classic_multi_read_block(self, uid, start_block, size, zero_exit=True):
 		"""Reads to as many successive blocks as necessary until either
 		size bytes (aligned to 16 bytes) have been read
 		"""
@@ -58,13 +59,19 @@ class PN532(core.PN532_Core):
 				raise RuntimeError(f'Could not authenticate block {block}')
 
 			if(self.debug):
-				print(f"Reading the {block}th block")
+				print(f"Reading the {block}th block:")
 			read_chunk = self.mifare_classic_read_block(block_number=block)
+			if(self.debug):
+				print(read_chunk)
 			if(read_chunk == None):
 				raise RuntimeError(f'Read nothing')
 
 			read_data.extend(read_chunk)
 			block_offset = block_offset + 1
+
+			if b'\x00' in read_chunk:
+				print("here")
+				break
 
 		return read_data
 
