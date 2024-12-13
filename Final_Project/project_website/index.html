@@ -122,34 +122,49 @@
 								<h2>System</h2>
 							</header>
 
-							<p align="left">Remember to use combination of descriptions, photos, and figures</p>
-
+							<p align="left">Summary: Integrates RFID technology with cloud-based AI for seamless object recognition and user interaction.  </p>
+							<p align="left">TODO: REMOVE THIS Remember to use combination of descriptions, photos, and figures</p>
+							
 							<h3 align="left">Architecture</h3>
 
-							<p align="left">This system integrates RFID technology with cloud-based AI for seamless object recognition and user interaction.  </p>
 							<a href="#" class="image fit"><img src="images/block-diagram.jpg" alt="" /></a>
-							<p align="left"> When the user speaks a command into the mic, such as (What is this? or I want to store/register this XXX). This is sent over to the LLM on the cloud that then 
-								processes this information based on our customized prompt. It then sends a JSON packet to the ESP, which processes this information and turns on the buzzer to indicate 
-								it is ready to R/W onto the RFID tag.Once the tag has been read or written to, the esp sends a completion notification to the LLM which then uses a speaker and replies with a message.</p>
+							<p align="left"> When the user speaks a command into the mic, such as "What is this?"" or "I want to store/register this XXX", the digital audio is captured by the webapp and sent to the LLM 
+								to process based on our customized prompt. It converts the auditory command into a well defined JSON packet and sends it to the ESP, which processes this information and turns on the buzzer to indicate 
+								it is ready to R/W onto the RFID tag. Once a tag is within range, it will be read or written to and the ESP sends a completion notification to the LLM which then uses a speaker and replies with a message.</p>
 
 							<h3 align="left">Technical Components</h3>
 							<p align="left">Our physical components are the following:</p>
 							<ol>
 								<li>
 									<strong>RFID tags</strong><br>
-									RFID (Radio Frequency Identification) tags are small, passive devices that store data and communicate with a reader using radio waves. They are commonly used for inventory management, tracking objects, and providing unique identification for items. When scanned, RFID tags provide quick and accurate information about the object they are attached to.
+									RFID tags are passive devices that use radio waves to provide quick, accurate identification and tracking of objects.
 								</li>
 								<li>
 									<strong>Adafruit RFID Breakout Board</strong><br>
-									The Adafruit RFID Breakout Board is a compact and versatile module designed for easy integration with microcontrollers, such as Arduino or Raspberry Pi. It allows for seamless communication with RFID tags, making it ideal for projects that require reading and writing RFID data. This board is often used in applications like access control, asset tracking, and identification systems.
+									The Adafruit RFID Breakout Board enables easy integration with microcontrollers for reading and writing RFID data, ideal for access control, asset tracking, and identification systems.
 								</li>
 								<li>
-									<strong>Buzzer</strong><br>
-									A buzzer is an electronic device that emits sound when activated, typically used for signaling or alerting purposes. In this context, a buzzer provides audio feedback to the user, indicating successful scans or other system events. It's an important component in systems where visual feedback is not available or practical, offering an intuitive way to convey information.
+									<strong>Buzzer</strong><br>	
+									A buzzer emits sound for signaling, providing audio feedback in systems like this where visual cues are impractical.
+								</li>
+								<li>
+									<strong>ESP8266</strong><br>	
+									The ESP8266 is a low-cost Wi-Fi-enabled microcontroller with built-in TCP/IP stack, ideal for IoT applications.
+								</li>
+								<p align="left">Our software components are the following:</p>
+								<li>
+									<strong>Python Webapp</strong><br>	
+									Uses socket programming to interact with on-network ESP, and leverages gradio web interface for audio input and output.
+								<li>
+									<strong>GPT-mini, whisper, and Google TTS</strong><br>	
+									Technologies used to convert text to and from digital audio as well as interpret this text as a well defined command for the remote device.
 								</li>
 							</ol>					  
 							<h3 align="left">Prototype</h3>
-							<p align="left">We need to add pictures here</p>
+							<p align="left">TODO REMOVE THISWe need to add pictures here</p>
+							
+							
+							<p align="left">TODO REMOVE THIS: I SUGGEST WE DONT USE THIS IMAGE BC ITS</p>
 							<a href="#" class="image fit"><img src="images/components.jpg" alt="" /></a>
 						</div>
 					</section>
@@ -163,8 +178,8 @@
 							</header>
 
 							<p align="left">If you click the image below you wil be redirected to our youtube video shocasing our results.</p>
-
-
+							
+							
 							<article class="item">
 								<a href="https://youtu.be/tBifdRFoB7E" class="image fit"><img src="images/logo_RJ.jpg" alt="" /></a>
 								<header>
@@ -172,6 +187,18 @@
 								</header>
 							</article>
 
+							<p align="left"> 
+								As you can see we have show the ablilty of the system to correctly read and write these labels with voice interaction.
+							</p>
+
+							<p align="left"> For the next prototype for this project we would do a few things different. 
+								Firstly we would upgrade the ESP8266 to an ESP32, a more powerful microcontroller for a similar cost. 
+								The ESP32 would allow us to expand addtional IO and include a speaker and microphone to allow on device audio capture
+								and response. This digital audio could be streamed to our webapp which will still utilize the same LLM model and TTS to 
+								interpret and respond to audio commands. Additionally we could leverage a database that interacts with the webapp to potentially
+								store recent user data in case the user wants to ask things like "where did I put XXX", in which case the web-app could respond with
+								a stored location.
+							</p>
 
 						</div>
 					</section>
@@ -182,7 +209,7 @@
 							<header>
 								<h2>References</h2>
 							</header>
-							<p align="left"> We used the following references when developping our product:</p>
+							<p align="left"> We used the following references when developing our product:</p>
 							
 							<p align="left">
 								<a href="https://www.gradio.app/docs/gradio/fileexplorer" target="_blank">Gradio File Explorer Documentation</a><br>
@@ -217,18 +244,9 @@
 									<article class="item">
 										<a href="#" class="image fit"><img src="images/pic07.jpg" alt="" /></a>
 										<header>
-											<h3>Josh Mathew</h3>
+											<h3>Joshua Mathew</h3>
 											<p>Software Engineer and Aspiring MS Electrical Engineer| @Columbia</p>
-											<a href="www.linkedin.com" target="_blank"></a><br>
-										</header>
-									</article>
-								</div>
-								<div class="4u$ 12u$(mobile)">
-									<article class="item">
-										<a href="#" class="image fit"><img src="images/pic07.jpg" alt="" /></a>
-										<header>
-											<h3>Team Member</h3>
-											<p>Description and link</p>
+											<a href="https://www.linkedin.com/in/pulitha13/" target="https://www.linkedin.com/in/pulitha13/"></a><br>
 										</header>
 									</article>
 								</div>
