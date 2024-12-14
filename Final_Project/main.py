@@ -14,8 +14,6 @@ print("Free memory:", gc.mem_free())
 SSID = "Columbia University"
 Password = ""
 
-# SSID = "SpectrumSetup-57F5"
-# Password = "silvertune468"
 
 # Socket Info
 CMD_PORT = 7000

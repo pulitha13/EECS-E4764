@@ -1,29 +1,47 @@
-## Flashing ESP8266
+# EECS 4764 Final Project - Marco Polo
 
+
+
+## Setup ESP8266
+
+Instructions to flash ESP8266 with micropython
 ```
 esptool.py erase_flash
 esptool.py --baud 460800 write_flash --flash_size=detect 0 [FILE]
 ```
 
-## Using the repl shell
-```
-mpfshell --open <PORT> -nc repl
-```
-
-
-## Uploading code to flash
+Uploading code to ESP
 
 ```
-# General
-mpfshell -nc "open <PORT>; mput [FILES]"
-
-# To download ALL python files in your current dir 
+cd Final_Project
 mpfshell -nc "open <PORT>; mput .*\.py"
 
 ```
 
-Example of how to send JSON command using bash
+## Run the webserver
+
+You will need to modify the some global variables in 
+`webapp.py` and `main.py` to make sure that the ESP and webapp can connect to each other on your network and use GPT-mini
 
 ```
-echo -n '{"cmd": "display_time", "args": []}' | nc 10.206.92.248 7000
+cd Final_Project
+pip install -r requirements.txt
+python webapp/webapp.py
 ```
+Start using!
+
+## Examples
+
+Sample gradio default webapp interface
+
+![alt text](<Final_Project/images/Screenshot0.png>)
+
+Asking to label an item
+![alt text](<Final_Project/images/Screenshot1.png>)
+
+Asking to read an item label
+![alt text](<Final_Project/images/Screenshot2.png>)
+
+Corresponding ESP repl for this interaction
+![alt text](<Final_Project/images/Screenshot3.png>)
+

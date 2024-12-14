@@ -9,7 +9,7 @@ import os
 import requests
 
 POE_API_KEY = ''
-IP = '10.206.111.21'
+IP = ''
 CMD_PORT = 7000
 CMD_LIT_PORT = 7001
 prompt_header = """
