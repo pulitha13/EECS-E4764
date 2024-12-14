@@ -122,9 +122,7 @@
 								<h2>System</h2>
 							</header>
 
-							<p align="left">Summary: Integrates RFID technology with cloud-based AI for seamless object recognition and user interaction.  </p>
-							<p align="left">TODO: REMOVE THIS Remember to use combination of descriptions, photos, and figures</p>
-							
+							<p align="left">Summary: Integrates RFID technology with cloud-based AI for seamless object recognition and user interaction.  </p>							
 							<h3 align="left">Architecture</h3>
 
 							<a href="#" class="image fit"><img src="images/block-diagram.jpg" alt="" /></a>
@@ -161,11 +159,45 @@
 								</li>
 							</ol>					  
 							<h3 align="left">Prototype</h3>
-							<p align="left">TODO REMOVE THISWe need to add pictures here</p>
-							
-							
-							<p align="left">TODO REMOVE THIS: I SUGGEST WE DONT USE THIS IMAGE BC ITS</p>
-							<a href="#" class="image fit"><img src="images/components.jpg" alt="" /></a>
+							<ol>
+								<li>
+									<strong>RFID tags</strong><br>
+									<a href="#" class="" ><img width="250" src="images/adafruit_RFID_tag.jpg" alt="" /></a>
+									<p>The RFID tag stored the result from the LLM prtompt when using the write statement in the following format:
+										{"payload": {"name": Object_name, "time": timestamp, "location": loc} , "command": "write"}
+									</p>
+										
+								</li>
+								<li>
+									<strong>Adafruit RFID Breakout Board</strong><br>
+									<a href="#" class="" ><img width="250" src="images/adafruit_break_out_board.jpg" alt="" /></a>
+									<p>The Adafruit RFID Breakout Board works with the microcontrollers for reading and writing RFID data.</p>
+
+								</li>
+								<li>
+									<strong>Buzzer</strong><br>	
+									<a href="#" class="" ><img width="250" src="images/adafruit_buzzer.jpg" alt="" /></a>
+									<p>Worked as sound system to indicate that the RFID is ready to read or write when scannign the rfid tag</p>
+								</li>
+								<li>
+									<strong>ESP8266</strong><br>	
+									<a href="#" class="" ><img width="250" src="images/adafruit_products_2821_top_01_ORIG.jpg" alt="" /></a>
+									<p>The microcontroller with built-in TCP/IP stack is used to process the communication between the LLM and the RFID breakoutboard to utilize read and write functions</p>
+								</li>
+								<p align="left">Our software components are the following:</p>
+								<li>
+									<strong>Python Webapp</strong><br>	
+									<a href="#" class="" ><img width="500" src="images/gradio_interface.jpg" alt="" /></a>
+									<p>Uses socket programming to interact with on-network ESP, and leverages gradio web interface for audio input and output.
+									</p>
+
+								<li>
+									<strong>GPT-mini, whisper, and Google TTS</strong><br>	
+									Technologies used to convert text to and from digital audio as well as interpret this text as a well defined command for the remote device.
+								</li>
+							</ol>			
+
+						
 						</div>
 					</section>
 
@@ -200,6 +232,13 @@
 								a stored location.
 							</p>
 
+							<p>This is the Github link to our entire repository including our Final project:</p>
+							<a href="https://github.com/pulitha13/EECS-E4764" target="_blank">
+							    <img width="250" src="images/githun.jpg" alt="GitHub Logo" />
+							    <p style="font-size: 50px; display: inline; margin-left: 10px;">Github</p>
+							</a><br>
+							
+
 						</div>
 					</section>
 
@@ -232,14 +271,17 @@
 							<div class="row">
 								<div class="4u 12u$(mobile)">
 									<article class="item">
-										<a href="#" class="image fit"><img src="images/RobelW.jpg" alt="" /></a>
-										<header>
-											<h3>Robel Wondwossen</h3>
-											<p >Aspiring Electrical Engineer & Software Engineer | CS & EE @Columbia</p>
-											<a href="www.linkedin.com/in/robel-wondwossen" target="_blank"></a><br>
-										</header>
+									    <a href="#" class="image fit">
+										<img src="images/pic07.jpg" alt="Robel Wondwossen" />
+									    </a>
+									    <header>
+										<h3>Robel Wondwossen</h3>
+										<p>Aspiring Electrical Engineer & Software Engineer | CS & EE @Columbia</p>
+										<a href="https://www.linkedin.com/in/robel-wondwossen" target="_blank">View LinkedIn Profile</a>
+									    </header>
 									</article>
-								</div>
+								    </div>
+								    
 								<div class="4u 12u$(mobile)">
 									<article class="item">
 										<a href="#" class="image fit"><img src="images/pic07.jpg" alt="" /></a>
